@@ -37,11 +37,19 @@ public final class TaskDateRules {
 		};
 	}
 
-	/** Due-soon category used by notifications (P5): today..today+3, not DONE. */
-	public static Specification<Task> dueSoon(LocalDate today) {
+	/** Notification window (architecture §10.3): open tasks due on or before today+3, overdue included. */
+	public static Specification<Task> openDueBy(LocalDate horizon) {
 		return (root, query, cb) -> cb.and(
-				cb.between(root.<LocalDate>get("dueDate"), today, today.plusDays(DUE_SOON_DAYS)),
+				cb.lessThanOrEqualTo(root.<LocalDate>get("dueDate"), horizon),
 				cb.notEqual(root.get("status"), TaskStatus.DONE));
+	}
+
+	public static LocalDate dueSoonHorizon(LocalDate today) {
+		return today.plusDays(DUE_SOON_DAYS);
+	}
+
+	public static boolean isOverdue(LocalDate dueDate, LocalDate today) {
+		return dueDate.isBefore(today);
 	}
 
 	private static Specification<Task> overdue(LocalDate today) {

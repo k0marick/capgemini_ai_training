@@ -10,17 +10,25 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
 class SecurityConfig {
+
+	/** Publishes session-destroyed events (logout, expiry) so open sockets can be closed. */
+	@Bean
+	HttpSessionEventPublisher httpSessionEventPublisher() {
+		return new HttpSessionEventPublisher();
+	}
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http, OAuthLoginSuccessHandler success,
 			@Value("${app.base-url}") String appBaseUrl) throws Exception {
 		http
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/actuator/health", "/api/v1/csrf",
+						// /ws/notifications is permitted here; its interceptor checks Origin (403) then session (401).
+						.requestMatchers("/actuator/health", "/api/v1/csrf", "/ws/notifications",
 								"/oauth2/**", "/login/oauth2/**").permitAll()
 						.anyRequest().authenticated())
 				.csrf(csrf -> csrf

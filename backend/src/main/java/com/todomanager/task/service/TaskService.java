@@ -8,6 +8,7 @@ import com.todomanager.project.repository.ProjectRepository;
 import com.todomanager.task.TaskDateRules;
 import com.todomanager.task.TaskDateRules.DueFilter;
 import com.todomanager.task.dto.TaskCreateRequest;
+import com.todomanager.task.dto.TaskDueItem;
 import com.todomanager.task.dto.TaskResponse;
 import com.todomanager.task.dto.TaskStatusRequest;
 import com.todomanager.task.dto.TaskUpdateRequest;
@@ -21,6 +22,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -77,6 +79,18 @@ public class TaskService {
 			spec = spec.and(TaskDateRules.dueFilter(due, today));
 		}
 		return PageResponse.of(tasks.findAll(spec, pageable).map(TaskResponse::from));
+	}
+
+	/** Open tasks due within the notification window (overdue included); owner-scoped. Used by the notification feature. */
+	@Transactional(readOnly = true)
+	public List<TaskDueItem> findDueForNotifications(UUID userId) {
+		LocalDate today = TaskDateRules.today(clock, userZone(userId));
+		Specification<Task> spec = TaskSpecification.belongsToUser(userId)
+				.and(TaskDateRules.openDueBy(TaskDateRules.dueSoonHorizon(today)));
+		return tasks.findAll(spec, Sort.by("dueDate", "id").ascending()).stream()
+				.map(task -> new TaskDueItem(task.getId(), task.getProjectId(), task.getTitle(), task.getDueDate(),
+						task.getPriority(), TaskDateRules.isOverdue(task.getDueDate(), today)))
+				.toList();
 	}
 
 	private ZoneId userZone(UUID userId) {
