@@ -1,0 +1,16 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Build output (backend/ and frontend/ have their own .gitignore for module files)
+target/
+node_modules/
+dist/

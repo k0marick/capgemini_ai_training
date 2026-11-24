@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: todo-manager
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:todo_manager}?serverTimezone=UTC
+    username: ${MYSQL_USER:todo_user}
+    password: ${MYSQL_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-message: never
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 8h
+      cookie:
+        http-only: true
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:5173}
+
+notifications:
+  interval-ms: ${NOTIFICATION_INTERVAL_MS:60000}
