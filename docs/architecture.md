@@ -439,7 +439,6 @@ Found while writing this document; the source doc (`docs/personal-todo-manager-a
 - "Next 7 days" as `today..today+7` gives 8 dates; this document uses 7 (A3).
 - CI path is `.github/workflows/`, not `.GitHub-ci.yml`.
 - Provider values stored as `GOOGLE` / `GITHUB` enums.
-- Stray non-English fragment in §3 ("для").
 
 ## 16. Architecture Decision Records
 

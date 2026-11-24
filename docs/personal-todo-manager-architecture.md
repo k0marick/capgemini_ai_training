@@ -159,7 +159,7 @@ CREATE INDEX idx_tasks_project_due_date ON tasks(project_id, due_date);
 CREATE INDEX idx_tasks_project_status ON tasks(project_id, status);
 ```
 
-- UUID primary keys; Java enums + SQL CHECK; LocalDate / DATE для deadline; Instant / TIMESTAMPTZ для timestamps.
+- UUID primary keys; Java enums + SQL CHECK; LocalDate / DATE for deadline; Instant / TIMESTAMPTZ for timestamps.
 - Flyway migrations, Hibernate DDL `validate`.
 - Use `@Version` for optimistic locking; if you need to detect stale client-side updates, include the version in your DTOs or use ETag/If-Match headers.
 - Implement cascade deletion for projects, including a confirmation dialog that warns the user that all associated tasks will also be deleted.
