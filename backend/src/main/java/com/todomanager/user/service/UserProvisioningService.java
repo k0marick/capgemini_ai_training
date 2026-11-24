@@ -1,16 +1,21 @@
 package com.todomanager.user.service;
 
 import com.todomanager.auth.oauth.OAuthUserProfile;
+import com.todomanager.common.exception.BadRequestException;
 import com.todomanager.user.entity.AppUser;
 import com.todomanager.user.repository.UserRepository;
 import java.time.Clock;
+import java.time.DateTimeException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 /** Finds or creates a user by (provider, provider_user_id). Never links accounts by email. */
 @Service
@@ -35,6 +40,22 @@ public class UserProvisioningService {
 
 	public Optional<AppUser> findById(UUID id) {
 		return users.findById(id);
+	}
+
+	/** Validates an IANA zone ID before storing it. */
+	@Transactional
+	public AppUser updateTimezone(UUID id, String timezone) {
+		try {
+			ZoneId.of(timezone);
+		}
+		catch (DateTimeException invalid) {
+			throw new BadRequestException("timezone", "must be a valid IANA time zone");
+		}
+		AppUser user = users.findById(id)
+				// Session outlived its user row: treat as unauthenticated.
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+		user.changeTimezone(timezone);
+		return user;
 	}
 
 	/** Explicit transaction: self-invoked @Transactional methods would not start one. */

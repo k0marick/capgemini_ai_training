@@ -2,11 +2,15 @@ package com.todomanager.user.controller;
 
 import com.todomanager.auth.principal.AppUserPrincipal;
 import com.todomanager.user.dto.MeResponse;
+import com.todomanager.user.dto.PreferencesRequest;
 import com.todomanager.user.entity.AppUser;
 import com.todomanager.user.service.UserProvisioningService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,6 +30,16 @@ class MeController {
 		AppUser user = users.findById(principal.userId())
 				// Session outlived its user row: treat as unauthenticated.
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+		return toResponse(user);
+	}
+
+	@PatchMapping("/preferences")
+	MeResponse updatePreferences(@AuthenticationPrincipal AppUserPrincipal principal,
+			@Valid @RequestBody PreferencesRequest body) {
+		return toResponse(users.updateTimezone(principal.userId(), body.timezone()));
+	}
+
+	private static MeResponse toResponse(AppUser user) {
 		return new MeResponse(user.getId(), user.getProvider().name(), user.getEmail(),
 				user.getDisplayName(), user.getAvatarUrl(), user.getTimezone());
 	}

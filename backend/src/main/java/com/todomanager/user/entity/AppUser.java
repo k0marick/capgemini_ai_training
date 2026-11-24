@@ -63,6 +63,10 @@ public class AppUser {
 		applyProfile(profile, now);
 	}
 
+	public void changeTimezone(String timezone) {
+		this.timezone = timezone;
+	}
+
 	private void applyProfile(OAuthUserProfile profile, Instant now) {
 		this.email = profile.email();
 		this.displayName = profile.displayName();
