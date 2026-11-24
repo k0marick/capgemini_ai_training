@@ -6,7 +6,7 @@
 Persistent storage for a multi-user app with search and per-user scoping. Two browser tabs may edit the same task. The schema must be reproducible and tests must run against the real database engine.
 
 ## Decision
-- **MySQL 8.0** as the database; Testcontainers MySQL in integration tests (no H2).
+- **MySQL 8.0** as the database; integration tests run against a local MySQL 8.0 schema (no H2, no Docker; ADR-007).
 - **Flyway** migrations; Hibernate `ddl-auto=validate`.
 - **UUID** primary keys (`BINARY(16)`); timestamps `DATETIME(6)` in UTC.
 - Enums as strings with `CHECK` constraints.
@@ -19,6 +19,6 @@ Persistent storage for a multi-user app with search and per-user scoping. Two br
 - **Last-write-wins**: silently loses edits from stale tabs.
 
 ## Consequences
-- Requires Docker for integration tests (also needed for CI).
+- Integration tests need a reachable MySQL 8.0 test schema; CI provides one as a service container.
 - Clients must send `version` and handle 409 (refetch and message).
 - Search uses `LIKE` on `title`/`description`; full-text index deferred.

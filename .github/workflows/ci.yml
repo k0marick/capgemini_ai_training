@@ -6,8 +6,23 @@ on:
 
 jobs:
   backend:
-    name: Backend (Maven + Testcontainers)
+    name: Backend (Maven + MySQL service)
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0.46
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root_password
+          MYSQL_DATABASE: todo_manager_test
+          MYSQL_USER: todo_user
+          MYSQL_PASSWORD: ci_test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root_password"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      TEST_MYSQL_PASSWORD: ci_test_password
     defaults:
       run:
         working-directory: backend
