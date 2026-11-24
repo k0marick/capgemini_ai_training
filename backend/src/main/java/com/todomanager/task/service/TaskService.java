@@ -5,6 +5,8 @@ import com.todomanager.common.exception.ConflictException;
 import com.todomanager.common.exception.ResourceNotFoundException;
 import com.todomanager.common.web.PageResponse;
 import com.todomanager.project.repository.ProjectRepository;
+import com.todomanager.task.TaskDateRules;
+import com.todomanager.task.TaskDateRules.DueFilter;
 import com.todomanager.task.dto.TaskCreateRequest;
 import com.todomanager.task.dto.TaskResponse;
 import com.todomanager.task.dto.TaskStatusRequest;
@@ -14,7 +16,11 @@ import com.todomanager.task.entity.TaskPriority;
 import com.todomanager.task.entity.TaskStatus;
 import com.todomanager.task.repository.TaskRepository;
 import com.todomanager.task.specification.TaskSpecification;
+import com.todomanager.user.service.UserProvisioningService;
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -31,14 +37,17 @@ public class TaskService {
 	private static final Set<String> SORTABLE = Set.of("dueDate", "priority", "createdAt", "title", "status");
 	private static final String DEFAULT_SORT = "dueDate,asc";
 	private static final int MAX_PAGE_SIZE = 100;
+	private static final int MAX_QUERY_LENGTH = 100;
 
 	private final TaskRepository tasks;
 	private final ProjectRepository projects;
+	private final UserProvisioningService users;
 	private final Clock clock;
 
-	public TaskService(TaskRepository tasks, ProjectRepository projects, Clock clock) {
+	public TaskService(TaskRepository tasks, ProjectRepository projects, UserProvisioningService users, Clock clock) {
 		this.tasks = tasks;
 		this.projects = projects;
+		this.users = users;
 		this.clock = clock;
 	}
 
@@ -55,7 +64,25 @@ public class TaskService {
 		if (filter.priority() != null) {
 			spec = spec.and(TaskSpecification.hasPriority(filter.priority()));
 		}
+		String query = filter.query() == null ? "" : filter.query().trim();
+		if (query.length() > MAX_QUERY_LENGTH) {
+			throw new BadRequestException("q", "must be at most " + MAX_QUERY_LENGTH + " characters");
+		}
+		if (!query.isEmpty()) {
+			spec = spec.and(TaskSpecification.matchesText(query));
+		}
+		DueFilter due = filter.due() == null ? DueFilter.ALL : filter.due();
+		if (due != DueFilter.ALL) {
+			LocalDate today = TaskDateRules.today(clock, userZone(userId));
+			spec = spec.and(TaskDateRules.dueFilter(due, today));
+		}
 		return PageResponse.of(tasks.findAll(spec, pageable).map(TaskResponse::from));
+	}
+
+	private ZoneId userZone(UUID userId) {
+		return users.findById(userId)
+				.map(user -> ZoneId.of(user.getTimezone()))
+				.orElse(ZoneOffset.UTC);
 	}
 
 	@Transactional(readOnly = true)

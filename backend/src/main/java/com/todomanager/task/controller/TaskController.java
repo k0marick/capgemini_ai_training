@@ -2,6 +2,7 @@ package com.todomanager.task.controller;
 
 import com.todomanager.auth.principal.AppUserPrincipal;
 import com.todomanager.common.web.PageResponse;
+import com.todomanager.task.TaskDateRules.DueFilter;
 import com.todomanager.task.dto.TaskCreateRequest;
 import com.todomanager.task.dto.TaskResponse;
 import com.todomanager.task.dto.TaskStatusRequest;
@@ -40,10 +41,12 @@ class TaskController {
 			@RequestParam(required = false) UUID projectId,
 			@RequestParam(required = false) TaskStatus status,
 			@RequestParam(required = false) TaskPriority priority,
+			@RequestParam(required = false) String q,
+			@RequestParam(required = false) DueFilter due,
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "20") int size,
 			@RequestParam(required = false) String sort) {
-		return tasks.list(principal.userId(), new TaskFilter(projectId, status, priority), page, size, sort);
+		return tasks.list(principal.userId(), new TaskFilter(projectId, status, priority, q, due), page, size, sort);
 	}
 
 	@PostMapping("/projects/{projectId}/tasks")
