@@ -1,0 +1,22 @@
+
+Act as a Senior Full-Stack Software Architect and Software Engineer.
+Read the complete product requirements from docs/requirements.md and proposed high-level solution description from docs/personal-todo-manager-architecture.md and the project instructions from CLAUDE.md.
+
+We are building a Personal To-Do Manager MVP using Java 21, Spring Boot, MySQL, React, and TypeScript.
+
+Before writing any application code:
+1. Analyze all functional and non-functional requirements.
+2. Identify ambiguous requirements, security risks, and technical edge cases.
+3. Propose the backend and frontend module structure.
+4. Design the database schema and entity relationships.
+5. Define REST API contracts.
+6. Design Google OIDC and GitHub OAuth authentication flows.
+7. Design an authenticated bidirectional WebSocket notification protocol.
+8. Define the authorization strategy for strict user data isolation.
+9. Propose a comprehensive testing strategy.
+10. Create a phased implementation plan with dependencies and acceptance criteria.
+
+Prefer simple, maintainable solutions suitable for a modular monolith.
+Do not introduce microservices, Redis, Kafka, Kubernetes, or unnecessary abstraction layers.
+Document the proposed architecture in docs/architecture.md and major architectural decisions in docs/adr/.
+Do not implement the application until the architecture and implementation plan have been reviewed and approved.
