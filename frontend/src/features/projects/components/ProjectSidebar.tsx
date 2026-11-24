@@ -3,6 +3,7 @@ import { NavLink } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { useCreateProject, useProjects } from '../hooks'
 import { projectFormSchema, type ProjectFormValues } from '../schemas'
+import SampleDataButton from '../../dev/SampleDataButton'
 
 type Props = {
   userId: string
@@ -91,6 +92,7 @@ export default function ProjectSidebar({ userId, onNavigate }: Props) {
           Add project
         </button>
       </form>
+      <SampleDataButton />
     </nav>
   )
 }

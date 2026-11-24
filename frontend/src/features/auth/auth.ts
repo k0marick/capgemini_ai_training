@@ -34,7 +34,12 @@ export function useLogout() {
     mutationFn: () => apiFetch<void>('/api/v1/logout', { method: 'POST' }),
     onSettled: () => {
       // Drop all private cached data so the next user never sees it.
-      queryClient.clear()
+      // Mark the session as signed out (keeps the observer attached, so the app redirects to /login),
+      // then drop all other cached data so the next user never sees it.
+      queryClient.setQueryData(meQueryKey, null)
+      queryClient.removeQueries({
+        predicate: (query) => JSON.stringify(query.queryKey) !== JSON.stringify(meQueryKey),
+      })
     },
   })
 }

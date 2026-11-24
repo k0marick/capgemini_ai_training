@@ -1,6 +1,6 @@
 # Personal To-Do Manager — Architecture (MVP)
 
-Status: **P0 approved; P1 done; P2 in progress.**
+Status: **P0 approved; P1 done; P3 done; P4 done; P5 done; P6 in progress..**
 Sources: `docs/requirements.md`, `docs/personal-todo-manager-architecture.md`, `CLAUDE.md`.
 Decisions: `docs/adr/`.
 

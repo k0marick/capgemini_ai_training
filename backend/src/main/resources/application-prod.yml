@@ -1,0 +1,11 @@
+# Production: no API docs, Secure session cookie. Actuator exposes health only (application.yml).
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

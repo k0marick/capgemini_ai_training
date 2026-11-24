@@ -1,0 +1,6 @@
+# Local development: Swagger UI and OpenAPI JSON, sample-data endpoint (DevSampleDataController).
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

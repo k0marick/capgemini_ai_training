@@ -30,6 +30,8 @@ class SecurityConfig {
 						// /ws/notifications is permitted here; its interceptor checks Origin (403) then session (401).
 						.requestMatchers("/actuator/health", "/api/v1/csrf", "/ws/notifications",
 								"/oauth2/**", "/login/oauth2/**").permitAll()
+						// API docs and Swagger UI exist only when springdoc is enabled (dev profile).
+						.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 						.anyRequest().authenticated())
 				.csrf(csrf -> csrf
 						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
