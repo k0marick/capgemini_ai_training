@@ -1,6 +1,6 @@
 # Personal To-Do Manager — Architecture (MVP)
 
-Status: **P0 approved; P1 in progress.**
+Status: **P0 approved; P1 done; P3 done; P4 done; P5 done; P6 in progress..**
 Sources: `docs/requirements.md`, `docs/personal-todo-manager-architecture.md`, `CLAUDE.md`.
 Decisions: `docs/adr/`.
 
@@ -28,7 +28,7 @@ Decisions: `docs/adr/`.
 | Security | Secure session, CSRF, WS origin check | HttpOnly/SameSite cookies, CSRF on mutations, origin allowlist |
 | Correctness | Consistent date rules across filters and notifications | Single `TaskDateRules` with injected `Clock` |
 | Reliability | Reconnect; no stale notifications | Bounded backoff; diff-based batches; socket close on session end |
-| Quality | Automated tests for critical flows | Testcontainers MySQL, stub OAuth provider, in-process WS client |
+| Quality | Automated tests for critical flows | Local MySQL 8.0 test schema (no Docker, ADR-007), WireMock stub OAuth provider, in-process WS client |
 | Operability | Reproducible local run | Docker Compose (optional) + documented non-container path |
 | Scale | MVP, one instance | Sessions and WS registry in-memory; no distribution |
 
@@ -356,7 +356,7 @@ Registry: `ConcurrentHashMap` keyed by connection ID, secondary index by HTTP se
 | Level | Tools | Scope |
 |---|---|---|
 | Unit | JUnit 5, Mockito | `TaskDateRules`, mappers, validators, sort/escape helpers |
-| Integration (backend) | `@SpringBootTest`, Testcontainers MySQL (`@ServiceConnection`), MockMvc | Controllers, repositories, Flyway, owner scoping |
+| Integration (backend) | `@SpringBootTest`, local MySQL 8.0 schema `todo_manager_test` (ADR-007), MockMvc | Controllers, repositories, Flyway, owner scoping |
 | OAuth | Embedded WireMock as stub provider (discovery, token, userinfo, JWKS signed with test key) | Real callback exchange and provisioning; `issuer-uri`/endpoints overridden in test profile |
 | WebSocket | `@SpringBootTest(RANDOM_PORT)` + Spring `WebSocketClient`; session cookie obtained via stub login | Handshake, batches, SUBSCRIBE, logout closure |
 | Clock | Test `@Configuration` providing `Clock.fixed(2026-11-24T10:00:00Z)` | Deterministic dates |
@@ -383,7 +383,7 @@ Commands: `./mvnw verify` (backend), `npm run test -- --run` (frontend), `npx pl
 ## 13. Delivery and infrastructure
 
 Local run:
-- Mandatory path: `docker compose up --build` (MySQL with healthcheck + volume, backend, optional Nginx for frontend) or non-container: local MySQL 8.0, `./mvnw spring-boot:run`, `npm ci && npm run dev`.
+- Local run (no Docker, ADR-007): local MySQL 8.0, `./mvnw spring-boot:run`, `npm ci && npm run dev`. Docker Compose is optional and unused here.
 - Vite proxies `/api`, `/oauth2`, `/login/oauth2`, `/ws` (WS upgrade enabled) → same-origin; `APP_BASE_URL=http://localhost:5173`.
 
 `.env.example` (no secrets):
@@ -410,7 +410,7 @@ Spring profiles:
 
 CI (`.github/workflows/ci.yml`):
 1. `validate`: ESLint, `tsc --noEmit`, Prettier check.
-2. `backend-test` and `frontend-test` in parallel (Testcontainers needs Docker on runner).
+2. `backend-test` and `frontend-test` in parallel (backend uses a MySQL 8.0.46 service container).
 3. `build`: backend JAR, frontend bundle.
 4. `e2e`: Playwright with stub provider.
 5. Optional: Docker image build.
@@ -422,7 +422,7 @@ No provider secrets in repo or CI logs; OAuth credentials for manual verificatio
 | Phase | Scope | Depends on | Acceptance criteria |
 |---|---|---|---|
 | **P0 Review** | This document + ADRs; confirm A1–A3, A7, A10 | — | Approval recorded |
-| **P1 Foundation** | Monorepo layout; Spring Boot skeleton; Flyway V1; MySQL via Compose; Vite + React + Tailwind + shadcn skeleton with proxy; CI skeleton; `.env.example`; `.gitignore` | P0 | `./mvnw verify` runs a Testcontainers smoke test; `npm run build` passes; `docker compose up` healthy; Flyway validates on empty DB |
+| **P1 Foundation** (| Monorepo layout; Spring Boot skeleton; Flyway V1; MySQL via Compose; Vite + React + Tailwind + shadcn skeleton with proxy; CI skeleton; `.env.example`; `.gitignore`) | P0 | `./mvnw verify` runs the smoke test against local MySQL; `npm run build` passes; `docker compose up` healthy; Flyway validates on empty DB |
 | **P2 Authentication** | Google OIDC + GitHub OAuth; profile mappers; upsert; session; `/me`, `/csrf`, `/logout`; 401 JSON; login page | P1 | Stub-provider tests pass for both providers; identity uniqueness test; unverified Google email not stored; after logout `/me` → 401; session survives reload (manual or E2E) |
 | **P3 Projects & Tasks** | Entities, repos (owner-scoped), services, REST, DTO validation, quick status, optimistic locking, block-on-delete | P2 | Integration tests for CRUD; every endpoint returns 404 for foreign IDs; delete-blocked test; stale `version` → 409; invalid input → 400 with field errors |
 | **P4 Search & Dashboard UI** | JPA Specifications; `TaskDateRules`; task list UI, filters, search, forms (RHF + Zod), responsive layout, empty/loading states | P3 | Combined-filter tests; date-category tests with fixed Clock; LIKE escape test; RTL tests for validation and empty/no-results; usable at 375 px width |
@@ -439,7 +439,6 @@ Found while writing this document; the source doc (`docs/personal-todo-manager-a
 - "Next 7 days" as `today..today+7` gives 8 dates; this document uses 7 (A3).
 - CI path is `.github/workflows/`, not `.GitHub-ci.yml`.
 - Provider values stored as `GOOGLE` / `GITHUB` enums.
-- Stray non-English fragment in §3 ("для").
 
 ## 16. Architecture Decision Records
 

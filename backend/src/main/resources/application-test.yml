@@ -1,0 +1,17 @@
+# Tests run against a local MySQL 8.0 schema (no Docker). Create the schema and grant access first:
+#   CREATE DATABASE todo_manager_test; GRANT ALL ON todo_manager_test.* TO 'todo_user'@'%';
+spring:
+  datasource:
+    url: jdbc:mysql://${TEST_MYSQL_HOST:localhost}:${TEST_MYSQL_PORT:3306}/${TEST_MYSQL_DB:todo_manager_test}?serverTimezone=UTC
+    username: ${TEST_MYSQL_USER:todo_user}
+    password: ${TEST_MYSQL_PASSWORD:todo_insecure_password!1}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client
+            client-secret: test-google-secret
+          github:
+            client-id: test-github-client
+            client-secret: test-github-secret
