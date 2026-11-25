@@ -15,6 +15,7 @@ import com.todomanager.task.dto.TaskUpdateRequest;
 import com.todomanager.task.entity.Task;
 import com.todomanager.task.entity.TaskPriority;
 import com.todomanager.task.entity.TaskStatus;
+import com.todomanager.task.event.TasksChangedEvent;
 import com.todomanager.task.repository.TaskRepository;
 import com.todomanager.task.specification.TaskSpecification;
 import com.todomanager.user.service.UserProvisioningService;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,12 +47,15 @@ public class TaskService {
 	private final ProjectRepository projects;
 	private final UserProvisioningService users;
 	private final Clock clock;
+	private final ApplicationEventPublisher events;
 
-	public TaskService(TaskRepository tasks, ProjectRepository projects, UserProvisioningService users, Clock clock) {
+	public TaskService(TaskRepository tasks, ProjectRepository projects, UserProvisioningService users, Clock clock,
+			ApplicationEventPublisher events) {
 		this.tasks = tasks;
 		this.projects = projects;
 		this.users = users;
 		this.clock = clock;
+		this.events = events;
 	}
 
 	@Transactional(readOnly = true)
@@ -111,7 +116,7 @@ public class TaskService {
 				body.status() != null ? body.status() : TaskStatus.TODO,
 				body.priority() != null ? body.priority() : TaskPriority.MEDIUM,
 				body.dueDate(), clock.instant());
-		return TaskResponse.from(tasks.saveAndFlush(task));
+		return saved(userId, task);
 	}
 
 	@Transactional
@@ -119,7 +124,7 @@ public class TaskService {
 		Task task = owned(userId, id);
 		requireVersion(task, body.version());
 		task.update(body.title(), body.description(), body.status(), body.priority(), body.dueDate(), clock.instant());
-		return TaskResponse.from(tasks.saveAndFlush(task));
+		return saved(userId, task);
 	}
 
 	@Transactional
@@ -127,12 +132,20 @@ public class TaskService {
 		Task task = owned(userId, id);
 		requireVersion(task, body.version());
 		task.changeStatus(body.status(), clock.instant());
-		return TaskResponse.from(tasks.saveAndFlush(task));
+		return saved(userId, task);
 	}
 
 	@Transactional
 	public void delete(UUID userId, UUID id) {
 		tasks.delete(owned(userId, id));
+		events.publishEvent(new TasksChangedEvent(userId));
+	}
+
+	/** Persists the task and announces the change; listeners run after commit. */
+	private TaskResponse saved(UUID userId, Task task) {
+		TaskResponse response = TaskResponse.from(tasks.saveAndFlush(task));
+		events.publishEvent(new TasksChangedEvent(userId));
+		return response;
 	}
 
 	@Transactional(readOnly = true)

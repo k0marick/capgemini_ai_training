@@ -7,6 +7,8 @@ import {
   toSearchParams,
   type TaskFilters,
 } from '../filters'
+import ProjectHeader from '../../projects/components/ProjectHeader'
+import type { Project } from '../../projects/types'
 import { useTasks } from '../hooks'
 import type { Task } from '../types'
 import TaskEmptyState from './TaskEmptyState'
@@ -17,12 +19,14 @@ import TaskToolbar from './TaskToolbar'
 type Props = {
   userId: string
   projectId?: string
+  /** Loaded project; enables the rename and delete actions in the header. */
+  project?: Project
   title: string
 }
 
 type Dialog = { mode: 'create' } | { mode: 'edit'; task: Task }
 
-export default function TasksView({ userId, projectId, title }: Props) {
+export default function TasksView({ userId, projectId, project, title }: Props) {
   const [params, setParams] = useSearchParams()
   const filters = parseFilters(params)
   const [page, setPage] = useState(0)
@@ -37,14 +41,20 @@ export default function TasksView({ userId, projectId, title }: Props) {
   )
 
   const tasks = useTasks(userId, filters, projectId, page)
+  // Editing works on any page: the task carries its own project id.
+  const dialogProjectId = dialog?.mode === 'edit' ? dialog.task.projectId : projectId
   const data = tasks.data
   const filtered = hasActiveFilters(filters)
 
   return (
     <section aria-labelledby="tasks-heading" className="flex min-w-0 flex-1 flex-col gap-4">
-      <h2 id="tasks-heading" className="text-xl font-semibold tracking-tight text-slate-900">
-        {title}
-      </h2>
+      {projectId && project ? (
+        <ProjectHeader userId={userId} project={project} />
+      ) : (
+        <h2 id="tasks-heading" className="text-xl font-semibold tracking-tight text-slate-900">
+          {title}
+        </h2>
+      )}
       <TaskToolbar
         filters={filters}
         onChange={updateFilters}
@@ -121,11 +131,11 @@ export default function TasksView({ userId, projectId, title }: Props) {
         </>
       )}
 
-      {dialog && projectId && (
+      {dialog && dialogProjectId && (
         <TaskFormDialog
           key={dialog.mode === 'edit' ? dialog.task.id : 'create'}
           userId={userId}
-          projectId={projectId}
+          projectId={dialogProjectId}
           task={dialog.mode === 'edit' ? dialog.task : undefined}
           onClose={() => setDialog(null)}
         />

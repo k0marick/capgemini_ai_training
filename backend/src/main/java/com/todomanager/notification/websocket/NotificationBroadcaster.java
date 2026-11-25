@@ -66,10 +66,7 @@ public class NotificationBroadcaster {
 	/** Recomputes each connected user's batch once and pushes changes to that user's connections. */
 	public void refreshAll() {
 		for (UUID userId : registry.userIds()) {
-			List<NotificationItem> batch = notifications.batchFor(userId);
-			for (NotificationConnection connection : registry.forUser(userId)) {
-				push(connection, batch, false);
-			}
+			refreshUser(userId);
 		}
 		registry.all().removeIf(connection -> {
 			boolean closed = !connection.session().isOpen();
@@ -78,6 +75,14 @@ public class NotificationBroadcaster {
 			}
 			return closed;
 		});
+	}
+
+	/** Recomputes one user's batch and pushes changes to that user's connections. */
+	public void refreshUser(UUID userId) {
+		List<NotificationItem> batch = notifications.batchFor(userId);
+		for (NotificationConnection connection : registry.forUser(userId)) {
+			push(connection, batch, false);
+		}
 	}
 
 	/** Protocol-level ping keeps idle connections alive through proxies (architecture §10.1). */

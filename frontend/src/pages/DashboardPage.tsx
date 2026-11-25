@@ -16,9 +16,8 @@ export default function DashboardPage({ me }: { me: Me }) {
   const projects = useProjects(me.id)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const title = projectId
-    ? (projects.data?.find((project) => project.id === projectId)?.name ?? 'Project')
-    : 'All tasks'
+  const project = projectId ? projects.data?.find((item) => item.id === projectId) : undefined
+  const title = projectId ? (project?.name ?? 'Project') : 'All tasks'
 
   return (
     <NotificationProvider userId={me.id}>
@@ -68,6 +67,7 @@ export default function DashboardPage({ me }: { me: Me }) {
               key={projectId ?? 'all'}
               userId={me.id}
               projectId={projectId}
+              project={project}
               title={title}
             />
           </main>

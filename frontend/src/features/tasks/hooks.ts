@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { changeTaskStatus, createTask, listTasks, updateTask } from './api'
+import { projectsKey } from '../projects/hooks'
 import { buildTaskQuery, type TaskFilters } from './filters'
+import { changeTaskStatus, createTask, deleteTask, listTasks, updateTask } from './api'
 import type { Page, Task, TaskRequest, TaskStatus } from './types'
 
 /** All task caches of one user live under this prefix, so a logout or user switch never leaks data. */
@@ -34,6 +35,18 @@ export function useUpdateTask(userId: string) {
     mutationFn: ({ task, body }: { task: Task; body: TaskRequest }) =>
       updateTask(task.id, body, task.version),
     onSettled: () => queryClient.invalidateQueries({ queryKey: tasksKey(userId) }),
+  })
+}
+
+/** Deletes a task; also refreshes project task counts. */
+export function useDeleteTask(userId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (task: Task) => deleteTask(task.id),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: tasksKey(userId) })
+      void queryClient.invalidateQueries({ queryKey: projectsKey(userId) })
+    },
   })
 }
 

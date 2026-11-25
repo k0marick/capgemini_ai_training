@@ -25,3 +25,7 @@ export function changeTaskStatus(id: string, status: TaskStatus, version: number
     body: JSON.stringify({ status, version }),
   })
 }
+
+export function deleteTask(id: string): Promise<void> {
+  return apiFetch<void>(`/api/v1/tasks/${id}`, { method: 'DELETE' })
+}

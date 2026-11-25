@@ -15,7 +15,8 @@ Design docs: `docs/requirements.md`, `docs/architecture.md`, `docs/adr/`.
 - Java 21 (the Maven wrapper is included; no global Maven needed)
 - Node.js 22+
 - MySQL 8.0 running locally
-- On Windows, run the `./mvnw` and `npm` commands from Git Bash (the Maven wrapper is a shell script)
+- On Windows, run `./mvnw` and `npm` commands from Git Bash (`mvnw` is a shell script; PowerShell cannot run it).
+  In PowerShell use `.\mvnw.cmd` instead (requires `JAVA_HOME` to be set)
 
 ## 1. Database
 
@@ -67,7 +68,7 @@ Never commit real client secrets.
 ```bash
 # Terminal 1 - backend (port 8080)
 cd backend
-./mvnw spring-boot:run
+./mvnw spring-boot:run          # PowerShell: .\mvnw.cmd spring-boot:run
 
 # Terminal 2 - frontend (port 5173)
 cd frontend
